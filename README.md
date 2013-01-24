@@ -1,0 +1,134 @@
+#Installing TMC server  to ubuntu 12 LTS
+## Installing ubuntu on VMware Workstation
+### Given you have already installed ubuntu on vm.
+
+Hostname: TMC, you can give whatever you want  
+
+
+## Install some dependencies
+`apt-get install git zip unzip imagemagick openjdk-6-jdk openjdk-6-jre openjdk-6-jre-headless ant maven xorg build-essential git curl zlib1g-dev autoconf`  
+Install apache2  
+`apt-get install apache2`
+
+For developing this install screen:  
+`apt-get install screen`
+
+
+##Installing RVM
+`curl -L https://get.rvm.io | sudo bash -s stable --rails` 
+on ubuntu yu may need to `curl -L https://get.rvm.io | sudo bash -s -- --version 1.16.20` if rake is not found...
+`rvm install 1.9.3-p194`might be required  as well as `rvm 1.9.3-p194 --default`  
+Then run `rvm requirements` and install required packages.
+
+
+It created  group `rvm`, every user should be added to it.
+##Adding user to a group  
+`gpasswd -a [user] [group]`  
+
+Add user www-data to group rvm  
+`gpasswd -a www-data rvm`  
+Adding also me to this group  
+`gpasswd -a tmc rvm`  
+Remember to logout after adding yourself to rvm group!
+
+You may also need to edit `/etc/bash.bashrc`  
+add following line  
+`[[ -s "/usr/local/rvm/scripts/rvm" ]] && . "/usr/local/rvm/scripts/rvm"`
+
+##Creating ssh key and importing it to github
+`ssh-keygen -t rsa -b 2096`  
+add your public key to github  
+
+##Configuting TMC server
+###Cloning TMC-Server  
+https://github.com/testmycode/tmc-server.git  
+I decided to place it in my home directory  
+`git clone https://github.com/testmycode/tmc-server.git`  
+`cd tmc-server`  
+This may require adding ssh key to github  
+`git submodule update --init --recursive`  
+
+###Installing gems
+
+`sudo apt-get install libxslt-dev libxml2-dev` for nokogiri.  
+`sudo apt-get install libqt4-dev libqt4-core g++` for capybara-webkit  
+`sudo apt-get install libsqlite3-dev ` for rails
+for pg  `sudo apt-get install postgresql libpq-dev`
+You might need to install rails `gem install rails` 
+`gem install bundler && bundle install`
+###Configuring config/site.yml
+Based on config/site.defaults.yml
+Just read that file. No need for (major) changes. You may leave the file as it is.  
+
+###Configuring DB
+username: tmc
+password: tmc
+You need to create user tmc for pg
+`sudo su postgres`
+>postgres@TMC:/home/jamo$ createuser tmc -s -P
+>Enter password for new role: 
+>Enter it again: 
+Type in  `tmc`
+
+In /etc/postgresql/9.1/main/pg_hba.conf  
+Change peer to md5 like this:  
+>\ # Database administrative login by Unix domain socket  
+> local   all             postgres                                md5 #peer  
+
+>\ # TYPE  DATABASE        USER            ADDRESS                 METHOD  
+
+>\ # "local" is for Unix domain socket connections only  
+> local   all             all                                     md5 #peer  
+>\ # IPv4 local connections:
+> host    all             all             127.0.0.1/32            md5  
+>\ # IPv6 local connections:  
+> host    all             all             ::1/128                 md5  
+>\ # Allow replication connections from localhost, by a user with the  
+>\ # replication privilege.  
+>\ #local   replication     postgres                                peer  
+>\ #host    replication     postgres        127.0.0.1/32            md5  
+>\ #host    replication     postgres        ::1/128                 md5  
+
+`service postgresql restart`  
+For chances to have effect
+Then  
+`rake db:reset` for development db
+`env RAILS_ENV=production rake db:reset` for prodution db
+###############################################################################  
+
+
+#Installing TMC-sandbox
+`cd ext/tmc-sandbox/`  
+`apt-get install squashfs-tools multistrap build-essential e2fsprogs e2tools`  
+If you're on a Debian derivative, you may need to install Debian's archive key:  
+`curl -L http://ftp-master.debian.org/archive-key-6.0.asc | sudo apt-key add -`  
+And on ubuntu may require installing 
+http://packages.debian.org/wheezy/all/debian-archive-keyring/download
+
+`sudo make`  
+`cd web/`  
+`bundle install`  
+`rake ext`  
+`rvmsudo rake init:install`  
+
+
+#I
+At tmc-server/  `bundle install`  
+`rake compile` (later `rake recompile`)  
+`cp config/site.defaults.yml config/site.yml`  
+`sudo apt-get install realpath`  
+`rvmsudo rake comet:init:install`  
+Change comet urls in config/site.yml  if RAILS_ENV==PRODUCTION  
+ and base_url_for_remote_sanboxes port 3000 -> port 80 if RAILS_ENV==PRODUCTION  
+`rake comet:config:update` if RAILS_ENV==PRODUCTION  
+`rvmsudo rake reprocessor:init:install`  
+
+`apt-get install libapache2-mod-xsendfile`  if RAILS_ENV==PRODUCTION  
+
+
+#Setup
+`sudo /etc/init.d/tmc-comet start`  
+`sudo /etc/init.d/tmc-submission-reprocessor start`  
+`sudo /etc/init.d/tmc-sandbox start`  
+`rails server` or some other RoR setup. unless using Apache2  
+
