@@ -54,6 +54,7 @@ This may require adding ssh key to github
 `sudo apt-get install libqt4-dev libqt4-core g++` for capybara-webkit  
 `sudo apt-get install libsqlite3-dev ` for rails
 for pg  `sudo apt-get install postgresql libpq-dev`
+If installing postgresql fails miserable, then try again after a `sudo apt-get remove --purge postgresql`  
 You might need to install rails `gem install rails` 
 `gem install bundler && bundle install`
 ###Configuring config/site.yml
