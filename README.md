@@ -113,7 +113,7 @@ http://packages.debian.org/wheezy/all/debian-archive-keyring/download
 `rvmsudo rake init:install`  
 
 
-#I
+#Install
 At tmc-server/  `bundle install`  
 `rake compile` (later `rake recompile`)  
 `cp config/site.defaults.yml config/site.yml`  
@@ -125,7 +125,9 @@ Change comet urls in config/site.yml  if RAILS_ENV==PRODUCTION
 `rvmsudo rake reprocessor:init:install`  
 
 `apt-get install libapache2-mod-xsendfile`  if RAILS_ENV==PRODUCTION  
-
+#C-project support
+For now, tmc server, like tmc-sandbox, requires installation of `check`, `gcc` (build-essential) and `pkg-config`. You can install all of those using apt-get
+`apt-get install check gcc pkg-config build-essential`
 
 #Setup
 `sudo /etc/init.d/tmc-comet start`  
